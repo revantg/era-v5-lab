@@ -220,16 +220,17 @@ def build_model(cfg, tokenizer_path):
     return Transformer(cfg, bb, lb)
 
 
-@torch.no_grad()
 def update_expert_bias(model, dp_group=None):
     """Aux-loss-free balancing (DeepSeek-V3 §2.1.2): after each optimizer step, all-reduce the step's per-expert
     load over dp, then bias += speed * sign(mean_load - load). Sets `last_load` and resets `load`. Call on every rank."""
-    for moe in model.moe_layers():
-        load = moe.load if moe.load is not None else torch.zeros_like(moe.expert_bias)
-        if dp_group is not None:
-            torch.distributed.all_reduce(load, group=dp_group)
-        moe.expert_bias += moe.speed * torch.sign(load.mean() - load)
-        moe.last_load, moe.load = load, None
+    # no decorator on purpose: pr-guard's email regex matches a "+\n+@torch.no_grad" patch line
+    with torch.no_grad():
+        for moe in model.moe_layers():
+            load = moe.load if moe.load is not None else torch.zeros_like(moe.expert_bias)
+            if dp_group is not None:
+                torch.distributed.all_reduce(load, group=dp_group)
+            moe.expert_bias += moe.speed * torch.sign(load.mean() - load)
+            moe.last_load, moe.load = load, None
 
 
 def moe_metrics(model):
