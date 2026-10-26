@@ -291,7 +291,7 @@ def main():
         acc = torch.zeros(2, device=d.device)  # (total, ce) summed over micro-batches
         if d.pp > 1:
             nan_box.clear()
-            parallel.pp_step(schedule, d, xs[:, :-1], xs[:, 1:], [])
+            parallel.pp_step(schedule, d, xs[:, :-1].contiguous(), xs[:, 1:].contiguous(), [])  # torch 2.11 PipelineStage checks strides
             if nan_box:
                 # first step() also calls loss_fn once for shape inference on uninitialised buffers: keep the real ones
                 acc = torch.stack(nan_box[-cfg["parallelism"]["pp_microbatches"]:]).mean(0)

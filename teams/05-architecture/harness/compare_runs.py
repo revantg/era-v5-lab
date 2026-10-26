@@ -43,7 +43,7 @@ def compare(a, b, exact, rtol):
             if (sa, va) != (sb, vb):
                 print(f"FAIL first difference at step {sa}: {va} vs {vb}")
                 return False
-        if len(ra) != len(rb):
+        if len(ra) != len(rb) or not ra:
             print(f"FAIL length {len(ra)} vs {len(rb)}")
             return False
         print(f"exact: {len(ra)} steps byte-identical")
