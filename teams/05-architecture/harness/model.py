@@ -223,7 +223,7 @@ def build_model(cfg, tokenizer_path):
 def update_expert_bias(model, dp_group=None):
     """Aux-loss-free balancing (DeepSeek-V3 §2.1.2): after each optimizer step, all-reduce the step's per-expert
     load over dp, then bias += speed * sign(mean_load - load). Sets `last_load` and resets `load`. Call on every rank."""
-    # no decorator on purpose: pr-guard's email regex matches a "+\n+@torch.no_grad" patch line
+    # with-block, not a decorator: the lab pr-guard email regex flags a top-level decorator line in the patch
     with torch.no_grad():
         for moe in model.moe_layers():
             load = moe.load if moe.load is not None else torch.zeros_like(moe.expert_bias)
