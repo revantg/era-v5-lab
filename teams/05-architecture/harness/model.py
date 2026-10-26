@@ -239,7 +239,8 @@ def moe_metrics(model):
     for moe in model.moe_layers():
         frac = moe.last_load / moe.last_load.sum().clamp(min=1)
         out.append(dict(load=[round(v, 4) for v in frac.tolist()], dead_experts=int((moe.last_load == 0).sum()),
-                        top_expert_share=float(frac.max()), aux=float(moe.last_aux)))
+                        top_expert_share=float(frac.max()),
+                        aux=0.0 if moe.last_aux is None else float(moe.last_aux)))  # None when seq_aux_loss_coef == 0
     return out
 
 
